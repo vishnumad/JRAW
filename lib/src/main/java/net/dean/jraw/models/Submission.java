@@ -117,6 +117,9 @@ public abstract class Submission implements PublicContribution<SubmissionReferen
     @Nullable
     @Json(name = "selftext") public abstract String getSelfText();
 
+    @Nullable
+    @Json(name = "selftext_html") public abstract String getSelfTextHtml();
+
     /** If reddit thinks this submission is spam */
     public abstract boolean isSpam();
 

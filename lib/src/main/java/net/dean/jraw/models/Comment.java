@@ -58,6 +58,10 @@ public abstract class Comment implements PublicContribution<CommentReference>, N
     @Override
     public abstract String getBody();
 
+    @NotNull
+    @Json(name = "body_html")
+    public abstract String getBodyHtml();
+
     @Enveloped
     public abstract Listing<NestedIdentifiable> getReplies();
 
