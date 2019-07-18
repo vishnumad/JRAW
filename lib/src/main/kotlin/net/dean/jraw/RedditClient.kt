@@ -127,6 +127,25 @@ class RedditClient internal constructor(
 
         var req = r
 
+        // Hacky fix to token refresh issue
+        if (!authManager.canRenew()) {
+            // Cannot renew, so refresh token in AuthManager is null for some reason
+            // We can fetch the stored data in the token store and update the AuthManager
+            val username = authManager.currentUsername()
+            val authData = authManager.tokenStore.fetchLatest(username)
+            val refreshToken = authManager.tokenStore.fetchRefreshToken(username)
+
+            if (authData != null && refreshToken != null) {
+                val newAuthData = OAuthData.create(
+                    authData.accessToken,
+                    authData.scopes,
+                    refreshToken,
+                    authData.expiration
+                )
+                authManager.update(newAuthData)
+            }
+        }
+
         if (forceRenew || (autoRenew && authManager.needsRenewing() && authManager.canRenew())) {
             authManager.renew()
 
