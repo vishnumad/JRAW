@@ -35,5 +35,10 @@ class SearchPaginatorTest : Spek({
             val builder = SearchPaginator.inSubreddits(reddit, "pics", "funny")
             builder.baseUrl.should.equal("/r/pics+funny/search")
         }
+
+        it("should build baseUrl from multireddit") {
+            val builder = SearchPaginator.inMultireddit(reddit, "unidan", "crowfacts")
+            builder.baseUrl.should.equal("/user/unidan/m/crowfacts/search")
+        }
     }
 })

@@ -7,6 +7,7 @@ import net.dean.jraw.http.HttpRequest
 import net.dean.jraw.models.SearchSort
 import net.dean.jraw.models.Submission
 import net.dean.jraw.models.TimePeriod
+import net.dean.jraw.pagination.SearchPaginator.QuerySyntax.CLOUDSEARCH
 
 /**
  * This class allows access to [Reddit search functionality](https://www.reddit.com/search).
@@ -54,11 +55,25 @@ class SearchPaginator private constructor(
         protected var syntax = QuerySyntax.LUCENE
         protected var query = ""
 
-        fun limit(limit: Int): Builder { this.limit = limit; return this }
-        fun sorting(sorting: SearchSort): Builder { this.sorting = sorting; return this }
-        fun timePeriod(timePeriod: TimePeriod): Builder { this.timePeriod = timePeriod; return this }
-        fun syntax(syntax: QuerySyntax): Builder { this.syntax = syntax; return this }
-        fun query(query: String): Builder { this.query = query; return this }
+        fun limit(limit: Int): Builder {
+            this.limit = limit; return this
+        }
+
+        fun sorting(sorting: SearchSort): Builder {
+            this.sorting = sorting; return this
+        }
+
+        fun timePeriod(timePeriod: TimePeriod): Builder {
+            this.timePeriod = timePeriod; return this
+        }
+
+        fun syntax(syntax: QuerySyntax): Builder {
+            this.syntax = syntax; return this
+        }
+
+        fun query(query: String): Builder {
+            this.query = query; return this
+        }
 
         override fun build(): SearchPaginator = SearchPaginator(reddit, baseUrl, timePeriod, sorting, limit, syntax, query)
     }
@@ -110,6 +125,10 @@ class SearchPaginator private constructor(
 
             val prefix = subreddits.joinToString(prefix = "/r/", separator = "+")
             return Builder(reddit, prefix + baseUrlSuffix)
+        }
+
+        fun inMultireddit(reddit: RedditClient, username: String, multireddit: String): Builder {
+            return Builder(reddit, "/user/$username/m/$multireddit/$baseUrlSuffix")
         }
 
         fun everywhere(reddit: RedditClient): Builder = Builder(reddit, baseUrlSuffix)
