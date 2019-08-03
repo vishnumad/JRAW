@@ -117,14 +117,14 @@ class SearchPaginator private constructor(
     }
 
     companion object {
-        private val baseUrlSuffix = "/search"
+        private val baseUrlSuffix = "search"
 
         fun inSubreddits(reddit: RedditClient, vararg subreddits: String): Builder {
             if (subreddits.isEmpty())
                 return everywhere(reddit)
 
             val prefix = subreddits.joinToString(prefix = "/r/", separator = "+")
-            return Builder(reddit, prefix + baseUrlSuffix)
+            return Builder(reddit, "$prefix/$baseUrlSuffix")
         }
 
         fun inMultireddit(reddit: RedditClient, username: String, multireddit: String): Builder {

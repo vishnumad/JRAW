@@ -137,3 +137,8 @@ kotlin {
         coroutines "enable"
     }
 }
+compileTestKotlin {
+    kotlinOptions {
+        languageVersion = "1.2"
+    }
+}
