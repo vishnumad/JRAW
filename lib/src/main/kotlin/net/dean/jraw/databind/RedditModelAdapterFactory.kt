@@ -123,10 +123,9 @@ class RedditModelAdapterFactory(
         override fun fromJson(reader: JsonReader): Any? {
             val envelope = if (expectedKind != null) {
                 val path = reader.path
-                val properties = reader.readJsonValue() as? Map<*, *> ?:
-                    throw JsonDataException("Expected an object at $path")
-                val kind = properties["kind"] ?:
-                    throw JsonDataException("Expected a value at $path.kind")
+                val properties = reader.readJsonValue() as? Map<*, *>
+                    ?: throw JsonDataException("Expected an object at $path")
+                val kind = properties["kind"] ?: throw JsonDataException("Expected a value at $path.kind")
                 if (kind != expectedKind)
                     throw JsonDataException("Expected value at $path.kind to equal '$expectedKind', was ('$kind')")
 
@@ -146,7 +145,29 @@ class RedditModelAdapterFactory(
     ) : JsonAdapter<Any>() {
 
         override fun toJson(writer: JsonWriter?, value: Any?) {
-            throw UnsupportedOperationException("Serializing dynamic models aren't supported right now")
+            if (value == null) {
+                writer?.nullValue()
+                return
+            }
+
+            val potentiallyAutoValueClass = value::class.java
+
+            val kind = registry
+                .filter { it.value.isAssignableFrom(potentiallyAutoValueClass) }
+                .map { it.key }
+                .firstOrNull()
+                ?: throw IllegalArgumentException("No registered kind for this class: ${value.javaClass}")
+
+            val clazz = registry[kind]!!
+
+            with(writer!!) {
+                beginObject()
+                name("kind")
+                value(kind)
+                name("data")
+                moshi.adapter<Any>(clazz).serializeNulls().toJson(writer, value)
+                endObject()
+            }
         }
 
         override fun fromJson(reader: JsonReader): Any {
@@ -155,8 +176,7 @@ class RedditModelAdapterFactory(
             val json = expectType<Map<String, Any>>(reader.readJsonValue(), path)
             val kind = expectType<String>(json["kind"], "$path.kind")
 
-            val clazz = registry[kind] ?:
-                throw IllegalArgumentException("No registered class for kind '$kind'")
+            val clazz = registry[kind] ?: throw IllegalArgumentException("No registered class for kind '$kind'")
 
             val envelopeType = Types.newParameterizedType(RedditModelEnvelope::class.java, clazz)
             val adapter = moshi.adapter<RedditModelEnvelope<*>>(envelopeType)
@@ -282,8 +302,8 @@ class RedditModelAdapterFactory(
         private inline fun <reified T> expectType(obj: Any?, path: String): T {
             if (obj == null)
                 throw JsonDataException("Expected value at '$path' to be non-null")
-            return obj as? T ?:
-                throw JsonDataException("Expected value at '$path' to be a ${T::class.java.name}, was ${obj::class.java.name}")
+            return obj as? T
+                ?: throw JsonDataException("Expected value at '$path' to be a ${T::class.java.name}, was ${obj::class.java.name}")
         }
     }
 }
