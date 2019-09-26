@@ -23,6 +23,10 @@ open class DefaultPaginator<T : UniquelyIdentifiable> protected constructor(
 
     /** See [Builder.sorting] */
     val sorting: Sorting,
+
+    /** See [Builder.customAnchor] */
+    val customAnchorFullName: String? = null,
+
     limit: Int,
     clazz: Class<T>
 ) : Paginator<T>(reddit, baseUrl, limit, clazz) {
@@ -35,10 +39,11 @@ open class DefaultPaginator<T : UniquelyIdentifiable> protected constructor(
         )
 
         if (sorting.requiresTimePeriod)
-            args.put("t", timePeriod.name.toLowerCase())
+            args["t"] = timePeriod.name.toLowerCase()
 
-        if (current?.nextName != null)
-            args.put("after", current!!.nextName!!)
+        val anchor = customAnchorFullName ?: current?.nextName
+        if (anchor != null)
+            args["after"] = anchor
 
         val path = if (sortingAlsoInPath) "$baseUrl/$sortingString" else baseUrl
 
@@ -64,6 +69,7 @@ open class DefaultPaginator<T : UniquelyIdentifiable> protected constructor(
         private var limit: Int = Paginator.DEFAULT_LIMIT
         private var timePeriod: TimePeriod = Paginator.DEFAULT_TIME_PERIOD
         private var sorting: S? = null
+        private var customAnchorFullName: String? = null
 
         /** Sets the limit */
         fun limit(limit: Int): Builder<T, S> { this.limit = limit; return this }
@@ -71,9 +77,11 @@ open class DefaultPaginator<T : UniquelyIdentifiable> protected constructor(
         fun sorting(sorting: S): Builder<T, S> { this.sorting = sorting; return this }
         /** Sets the time period */
         fun timePeriod(timePeriod: TimePeriod): Builder<T, S> { this.timePeriod = timePeriod; return this }
+        /** Sets a custom pagination anchor */
+        fun customAnchor(anchorFullName: String): Builder<T, S> { this.customAnchorFullName = anchorFullName; return this }
 
         override fun build(): DefaultPaginator<T> =
-            DefaultPaginator(reddit, baseUrl, sortingAlsoInPath, timePeriod, sorting ?: Paginator.DEFAULT_SORTING, limit, clazz)
+            DefaultPaginator(reddit, baseUrl, sortingAlsoInPath, timePeriod, sorting ?: Paginator.DEFAULT_SORTING, customAnchorFullName, limit, clazz)
 
         /** */
         companion object {
